@@ -5,6 +5,9 @@ import morgan from 'morgan';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import userRoutes from './routes/userRoutes.js';
+import campaignRoutes from './routes/campaignRoutes.js';
+import siteRoutes from './routes/siteRoutes.js';
+
 import errorHandler from './middlewares/error.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -27,6 +30,9 @@ if (process.env.NODE_ENV === 'development') {
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
+// Serve static files from the public directory
+app.use(express.static('public'));
+
 // Test route
 app.get('/api/v1', (req, res) => {
   res.status(200).json({
@@ -38,6 +44,9 @@ app.get('/api/v1', (req, res) => {
 
 // Mount routers
 app.use('/api/v1/auth', userRoutes);
+app.use('/api/v1/campaigns', campaignRoutes);
+app.use('/api/v1/sites', siteRoutes);
+
 
 // Handle 404 - Keep this as the last route
 app.use('*', (req, res) => {
