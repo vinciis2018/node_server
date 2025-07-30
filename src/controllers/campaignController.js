@@ -23,8 +23,6 @@ export const createCampaign = async (req, res, next) => {
       endDate,
       cost,
       description,
-      Monitoring = [],
-      Bounty = {}
     } = req.body;
 
     // Validate required fields
@@ -47,8 +45,6 @@ export const createCampaign = async (req, res, next) => {
       startDate: startDate || new Date(),
       endDate: endDate || new Date(),
       cost: cost || 0,
-      Monitoring: Array.isArray(Monitoring) ? Monitoring : [],
-      Bounty: Bounty || {}
     });
 
     res.status(201).json({
@@ -210,7 +206,6 @@ export const updateCampaign = async (req, res, next) => {
       sites, // Array of site names
       ...otherFields
     } = req.body;
-console.log(sites);
     // Build update object
     const updateFields = {};
     
@@ -274,19 +269,6 @@ export const getCampaignDetails = async (req, res, next) => {
 // @access  Private
 export const uploadCampaignExcel = async (req, res, next) => {
   try {
-    // Log request details for debugging
-    console.log('Request received - Upload Excel', {
-      params: req.params,
-      body: req.body,
-      filesCount: req.files ? req.files.length : 0,
-      filesInfo: req.files ? req.files.map(f => ({
-        fieldname: f.fieldname,
-        originalname: f.originalname,
-        mimetype: f.mimetype,
-        size: f.size,
-        filename: f.filename
-      })) : 'No files received'
-    });
 
     if (!req.files || req.files.length === 0) {
       return next(new ErrorResponse('Please upload at least one file', 400));
@@ -301,6 +283,8 @@ export const uploadCampaignExcel = async (req, res, next) => {
 
     // Get campaign ID from either URL params or form data
     const campaignId = req.params.id || req.body.campaignId;
+    const siteId = req.body.siteId;
+    
     if (!campaignId) {
       return next(new ErrorResponse('Campaign ID is required', 400));
     }
@@ -317,17 +301,16 @@ export const uploadCampaignExcel = async (req, res, next) => {
       uploadDate: new Date()
     }));
     
+    const siteIndex = campaign.sites.findIndex(m => m.siteId.toString() === siteId);
+    
     // Add new files to the campaign
-    campaign.excelFiles.push(...uploadedFiles);
+    campaign.sites[siteIndex].excelFiles.push(...uploadedFiles);
     await campaign.save();
 
     res.status(200).json({
       success: true,
       count: uploadedFiles.length,
-      data: uploadedFiles.map(file => ({
-        url: file.url,
-        fileName: file.originalName
-      }))
+      data: campaign
     });
   } catch (err) {
     // Clean up uploaded files if there was an error
@@ -349,27 +332,19 @@ export const uploadCampaignExcel = async (req, res, next) => {
 // @access  Private
 export const uploadMonitoringData = async (req, res, next) => {
   try {
-    // Log request details for debugging
-    console.log('Request received - Upload Monitoring Data', {
-      params: req.params,
-      body: req.body,
-      filesCount: req.files ? req.files.length : 0,
-      filesInfo: req.files ? req.files.map(f => ({
-        fieldname: f.fieldname,
-        originalname: f.originalname,
-        mimetype: f.mimetype,
-        size: f.size,
-        filename: f.filename
-      })) : 'No files received'
-    });
-
-    const { siteId, siteName, date, notes } = req.body;
+    const { siteId, date } = req.body;
     
     // Validate required fields
-    if (!siteId || !siteName) {
-      return next(new ErrorResponse('Site ID and Site Name are required', 400));
+    if (!siteId) {
+      return next(new ErrorResponse('Site ID is required', 400));
     }
 
+    // Find the site to get siteName
+    const site = await Site.findById(siteId);
+    if (!site) {
+      return next(new ErrorResponse(`Site not found with id of ${siteId}`, 404));
+    }
+    
     // Find the campaign
     const campaign = await Campaign.findById(req.params.id);
     if (!campaign) {
@@ -379,7 +354,6 @@ export const uploadMonitoringData = async (req, res, next) => {
     // Prepare monitoring data
     const monitoringData = {
       date: date || new Date().toISOString(),
-      notes: notes || '',
       uploadedVideo: req.files?.find(f => f.mimetype.startsWith('video/'))?.filename || '',
       monitoringMedia: req.files
         ?.filter(f => f.mimetype.startsWith('image/'))
@@ -390,26 +364,17 @@ export const uploadMonitoringData = async (req, res, next) => {
     };
 
     // Check if monitoring entry exists for this site
-    const siteIndex = campaign.monitoring.findIndex(m => m.siteId.toString() === siteId);
+    const siteIndex = campaign.sites.findIndex(m => m.siteId.toString() === siteId);
     
-    if (siteIndex >= 0) {
-      // Add to existing site's monitoring data
-      campaign.monitoring[siteIndex].monitoringData.push(monitoringData);
-    } else {
-      // Create new monitoring entry for site
-      campaign.monitoring.push({
-        siteId,
-        siteName,
-        monitoringData: [monitoringData]
-      });
-    }
+    campaign.sites[siteIndex].monitoringData.push(monitoringData);
 
     // Save the updated campaign
     await campaign.save();
 
     res.status(200).json({
       success: true,
-      data: monitoringData
+      count: req.files.length,
+      data: campaign
     });
   } catch (err) {
     console.error('Error uploading monitoring data:', err);

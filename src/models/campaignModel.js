@@ -16,13 +16,16 @@ const monitoringDataSchema = new mongoose.Schema({
   date: { type: String, default: Date.now() },
   uploadedVideo: { type: String, default: "" },
   monitoringMedia: { type: [monitoringMediaSchema], default: [] },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
 const siteSchema = new mongoose.Schema({
   siteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Site' },
   siteName: { type: String, default: "" },
   siteType: { type: String, default: "" },
-  siteLocation: { type: String, default: "" },
   monitoringData: { type: [monitoringDataSchema] },
   excelFiles: [excelFilesSchema],
 
@@ -65,10 +68,8 @@ const campaignSchema = new mongoose.Schema({
   cost: { type: Number, default: 0 },
   bounty: { type: Object, default: {} },
   sites: [siteSchema],
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+}, {
+  timestamps: true
 });
 
 

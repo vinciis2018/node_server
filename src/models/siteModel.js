@@ -27,10 +27,8 @@ const siteSchema = new mongoose.Schema({
   siteLocation: {
     type: siteLocationSchema,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+}, {
+  timestamps: true
 });
 
 
