@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import userRoutes from './routes/userRoutes.js';
 import campaignRoutes from './routes/campaignRoutes.js';
 import siteRoutes from './routes/siteRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 import errorHandler from './middlewares/error.js';
 
@@ -46,6 +47,8 @@ app.get('/api/v1', (req, res) => {
 app.use('/api/v1/auth', userRoutes);
 app.use('/api/v1/campaigns', campaignRoutes);
 app.use('/api/v1/sites', siteRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
+
 
 
 // Handle 404 - Keep this as the last route

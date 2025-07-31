@@ -26,9 +26,8 @@ const siteSchema = new mongoose.Schema({
   siteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Site' },
   siteName: { type: String, default: "" },
   siteType: { type: String, default: "" },
-  monitoringData: { type: [monitoringDataSchema] },
-  excelFiles: [excelFilesSchema],
-
+  monitoringData: { type: [monitoringDataSchema], default: [] },
+  excelFiles: { type: [excelFilesSchema], default: []},
 });
 
 const campaignSchema = new mongoose.Schema({
