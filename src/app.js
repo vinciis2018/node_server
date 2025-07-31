@@ -10,6 +10,7 @@ import siteRoutes from './routes/siteRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 
 import errorHandler from './middlewares/error.js';
+import awsRoutes from './routes/awsRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,6 +49,8 @@ app.use('/api/v1/auth', userRoutes);
 app.use('/api/v1/campaigns', campaignRoutes);
 app.use('/api/v1/sites', siteRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
+app.use('/api/v1/aws', awsRoutes);
+
 
 
 

@@ -8,8 +8,6 @@ import {
   updateCampaign,
   uploadMonitoringData
 } from '../controllers/campaignController.js';
-import { uploadExcelFiles } from '../utils/excelFileUpload.js';
-import { uploadMonitoringMedia } from '../utils/monitoringUpload.js';
 
 const router = express.Router();
 
@@ -37,15 +35,13 @@ router.put(
 
 // Upload multiple Excel files for a campaign
 router.put(
-  ['/upload-excel', '/:id/upload-excel'],
-  uploadExcelFiles,
+  ['/upload-excel', '/:id/upload-excel', '/:id/:siteId/upload-excel'],
   uploadCampaignExcel
 );
 
 // Upload monitoring data for a campaign
 router.put(
-  ['/monitoring-media', '/:id/monitoring-media'],
-  uploadMonitoringMedia,
+  ['/monitoring-media', '/:id/monitoring-media', '/:id/:siteId/monitoring-media'],
   uploadMonitoringData
 );
 

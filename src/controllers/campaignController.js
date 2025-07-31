@@ -269,21 +269,15 @@ export const getCampaignDetails = async (req, res, next) => {
 // @access  Private
 export const uploadCampaignExcel = async (req, res, next) => {
   try {
+    console.log(req.body);
 
-    if (!req.files || req.files.length === 0) {
+    if (!req.body.files || req.body.files.length === 0) {
       return next(new ErrorResponse('Please upload at least one file', 400));
     }
     
-    // Verify all files are using the correct field name
-    const invalidFiles = req.files.filter(f => f.fieldname !== 'files');
-    if (invalidFiles.length > 0) {
-      console.error('Invalid file field names found:', invalidFiles.map(f => f.fieldname));
-      return next(new ErrorResponse('All files must use the field name "files"', 400));
-    }
-
     // Get campaign ID from either URL params or form data
     const campaignId = req.params.id || req.body.campaignId;
-    const siteId = req.body.siteId;
+    const siteId = req.params.siteId || req.body.siteId;
     
     if (!campaignId) {
       return next(new ErrorResponse('Campaign ID is required', 400));
@@ -295,9 +289,9 @@ export const uploadCampaignExcel = async (req, res, next) => {
     }
 
     // Process each uploaded file
-    const uploadedFiles = req.files.map(file => ({
-      url: `/uploads/${file.filename}`,
-      originalName: file.originalname,
+    const uploadedFiles = req.body.files.map(file => ({
+      url: file.url,
+      originalName: file.fileName,
       uploadDate: new Date()
     }));
     
@@ -313,16 +307,6 @@ export const uploadCampaignExcel = async (req, res, next) => {
       data: campaign
     });
   } catch (err) {
-    // Clean up uploaded files if there was an error
-    if (req.files && req.files.length > 0) {
-      const fs = await import('fs');
-      req.files.forEach(file => {
-        const filePath = path.join(__dirname, `../../public/uploads/${file.filename}`);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      });
-    }
     next(err);
   }
 };
@@ -354,12 +338,13 @@ export const uploadMonitoringData = async (req, res, next) => {
     // Prepare monitoring data
     const monitoringData = {
       date: date || new Date().toISOString(),
-      uploadedVideo: req.files?.find(f => f.mimetype.startsWith('video/'))?.filename || '',
-      monitoringMedia: req.files
-        ?.filter(f => f.mimetype.startsWith('image/'))
+      uploadedVideo: req.body.files?.find(f => f.fileType.startsWith('video/'))?.filename || '',
+      monitoringMedia: req.body.files
+        ?.filter(f => f.fileType.startsWith('image/'))
         .map(file => ({
-          type: file.mimetype,
-          media: file.filename
+          type: req.body.monitoringType,
+          originalName: file.fileName,
+          url: file.url
         })) || []
     };
 
@@ -373,7 +358,7 @@ export const uploadMonitoringData = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      count: req.files.length,
+      count: req.body.files.length,
       data: campaign
     });
   } catch (err) {

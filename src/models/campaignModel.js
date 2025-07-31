@@ -9,7 +9,8 @@ const excelFilesSchema = new mongoose.Schema({
 
 const monitoringMediaSchema = new mongoose.Schema({
   type: { type: String, default: "" },
-  media: { type: String, default: "" },
+  originalName: { type: String, default: "" },
+  url: { type: String, default: "" },
 });
 
 const monitoringDataSchema = new mongoose.Schema({
