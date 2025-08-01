@@ -1,6 +1,6 @@
 import Campaign from '../models/campaignModel.js';
 import ErrorResponse from '../utils/errorResponse.js';
-import { readExcelFromLocalUrl } from '../utils/fileUtils.js';
+import { readExcelFromS3Url } from '../utils/fileUtils.js';
 
 // @desc    Analyze logs from uploaded Excel file
 // @route   GET /api/v1/analytics/getAnalyticsFromExcel/:id/:siteId
@@ -28,8 +28,9 @@ export const analyzeLogsFromExcel = async (req, res, next) => {
     // Read the first Excel file
     const excelFile = site.excelFiles[0];
     
+    console.log(excelFile)
     try {
-      const result = await readExcelFromLocalUrl(excelFile.url);
+      const result = await readExcelFromS3Url(excelFile.url);
       
       if (result.error) {
         return next(new ErrorResponse(result.error, 400));

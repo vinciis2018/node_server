@@ -3,16 +3,19 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import mongoose from "mongoose";
 import { s3, s3BucketName, s3BucketRegion } from "../config/aws.js";
 
-const developmentFolder = "development";
 /**
  * Generate a pre-signed URL for downloading a file from S3
  * @param {string} key - The S3 object key (file path)
  * @returns {Promise<string>} - The pre-signed URL
  */
-async function getObject(key) {
+export const getObject = async (key) => {
+  // Make sure the key doesn't contain the full URL or bucket name
+  // Remove any existing URL parts from the key if present
+  const cleanKey = key.replace(/^https?:\/\/[^\/]+\//, '');
+  
   const command = new GetObjectCommand({
     Bucket: s3BucketName,
-    Key: key,
+    Key: cleanKey,
   });
   
   // Generate a URL that expires in 1 hour (3600 seconds)
@@ -40,7 +43,7 @@ export const getS3UploadUrl = async (req, res) => {
     // Create the S3 command
     const command = new PutObjectCommand({
       Bucket: s3BucketName,
-      Key: `${developmentFolder}/${fileName}`,
+      Key: fileName,
       ContentType: contentType,
     });
 
